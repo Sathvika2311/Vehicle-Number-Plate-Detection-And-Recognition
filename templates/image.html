@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANPR Image Processing</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #f4f6f8);
+            padding: 30px 0;
+            color: #333;
+        }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: #1976d2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.3s; width: auto;}
+        .back-btn:hover { background: #0d47a1; }
+
+        .container { background: #fff; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 420px; margin: 0 auto 30px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #0d47a1; }
+
+        .file-input { border: 2px dashed #bbdefb; padding: 20px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
+        .file-input input { display: none; }
+        .file-input label { cursor: pointer; color: #555; }
+        .file-name { margin-top: 10px; font-size: 14px; color: #555; }
+
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; background: #b0bec5; color: white; cursor: not-allowed; transition: background 0.3s; }
+        button.enabled { background: #1976d2; cursor: pointer; }
+        button.enabled:hover { background: #0d47a1; }
+
+        .image-wrapper { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px; }
+
+        .image-box { background: #fff; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); min-height: 380px; display: flex; flex-direction: column; justify-content: flex-start; }
+        .image-box h3 { margin-bottom: 10px; color: #1565c0; }
+        .image-box img { max-width: 100%; border-radius: 6px; border: 1px solid #ccc; }
+        .placeholder { color: #888; font-size: 14px; padding: 40px 0; }
+
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #1976d2; border-radius: 50%; width: 50px; height: 50px; margin: 40px auto; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<button class="back-btn" id="backHome">← Back</button>
+
+<div class="container">
+    <h2>Upload Image</h2>
+    <form id="imageForm">
+        <div class="file-input">
+            <label for="image">Click to select image</label>
+            <input type="file" id="image" accept="image/*">
+            <div class="file-name" id="fileName">No file selected</div>
+        </div>
+        <button type="submit" id="processBtn">Process</button>
+    </form>
+</div>
+
+<div class="image-wrapper">
+    <div class="image-box">
+        <h3>Uploaded Image</h3>
+        <div id="uploadPreview" class="placeholder">No image uploaded</div>
+    </div>
+    <div class="image-box">
+        <h3>Processed Result</h3>
+        <div id="resultBox" class="placeholder">Result will appear here</div>
+    </div>
+</div>
+
+<script>
+history.replaceState(null, "", window.location.pathname);
+document.getElementById("backHome").onclick = () => window.location.href = "/";
+
+const fileInput = document.getElementById("image");
+const processBtn = document.getElementById("processBtn");
+const fileName = document.getElementById("fileName");
+const uploadPreview = document.getElementById("uploadPreview");
+const resultBox = document.getElementById("resultBox");
+
+processBtn.disabled = true;
+
+let lastImageBlob = null;
+let lastFileName = null;
+let lastUploadedSignature = null;
+
+
+fileInput.addEventListener("change", () => {
+    if (!fileInput.files.length) return;
+
+    const file = fileInput.files[0];
+
+    if (!file.type.startsWith("image/")) {
+        alert("Only image files are allowed");
+        fileInput.value = "";
+        return;
+    }
+
+    const currentSignature = `${file.name}_${file.size}_${file.lastModified}`;
+
+    
+    if (currentSignature === lastUploadedSignature) {
+        fileInput.value = "";
+        return;
+    }
+
+    lastUploadedSignature = currentSignature;
+    lastFileName = file.name;
+    fileName.textContent = lastFileName;
+
+    processBtn.disabled = false;
+    processBtn.classList.add("enabled");
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        uploadPreview.innerHTML = `<img src="${reader.result}">`;
+        fetch(reader.result)
+            .then(r => r.blob())
+            .then(b => lastImageBlob = b);
+    };
+    reader.readAsDataURL(file);
+
+    resultBox.innerHTML = `<div class="placeholder">Result will appear here</div>`;
+});
+
+
+document.getElementById("imageForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!lastImageBlob) return;
+
+    processBtn.disabled = true;
+    processBtn.classList.remove("enabled");
+    resultBox.innerHTML = `<div class="spinner"></div>`;
+
+    const formData = new FormData();
+    formData.append("image", lastImageBlob, lastFileName);
+
+    try {
+        const response = await fetch("/image", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.no_plate) {
+            resultBox.innerHTML = `<p style="color:red;font-weight:bold;">No plate detected in the uploaded image.</p>`;
+        } else if (data.result) {
+            resultBox.innerHTML = `<img src="/static/results/${data.result}">`;
+        } else {
+            resultBox.innerHTML = `<p style="color:red;font-weight:bold;">Processing failed</p>`;
+        }
+    } catch {
+        resultBox.innerHTML = `<p style="color:red;font-weight:bold;">Server error</p>`;
+    }
+});
+</script>
+
+</body>
+</html>

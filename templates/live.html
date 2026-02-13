@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ANPR Live Detection</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #f4f6f8);
+    padding: 30px 0;
+    color: #333;
+}
+
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    width:auto;
+}
+
+.container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 420px;
+    margin: 0 auto 25px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+h2 { color: #0d47a1; }
+
+.file-input {
+    border: 2px dashed #bbdefb;
+    padding: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.status-text {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #1976d2;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+}
+
+.live-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+video, img {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.placeholder {
+    padding: 60px 0;
+    color: #888;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" id="backHome">← Back</button>
+
+<div class="container">
+    <h2>Live Camera</h2>
+
+    <div class="file-input" id="openCamera">
+        Click to start camera
+        <div class="status-text" id="statusText">Camera not started</div>
+    </div>
+
+    <button id="stopBtn" disabled>Stop Camera</button>
+</div>
+
+<div class="live-wrapper">
+<div class="box">
+    <h3>Live Detection</h3>
+    <img id="resultImg" style="display:none;">
+    <div id="placeholder" class="placeholder">Live detection will appear here</div>
+    <video id="camera" autoplay playsinline style="display:none;"></video>
+</div>
+</div>
+
+<script>
+const openCamera = document.getElementById("openCamera");
+const stopBtn = document.getElementById("stopBtn");
+const statusText = document.getElementById("statusText");
+const camera = document.getElementById("camera");
+const resultImg = document.getElementById("resultImg");
+const placeholder = document.getElementById("placeholder");
+const backHome = document.getElementById("backHome");
+
+let stream = null;
+let ws = null;
+let sending = false;
+
+function cleanupLive() {
+    sending = false;
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send("__STOP__");
+    }
+
+    if (ws) {
+        ws.close();
+        ws = null;
+    }
+
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+    }
+
+    camera.srcObject = null;
+    resultImg.style.display = "none";
+    placeholder.style.display = "block";
+
+    statusText.textContent = "Camera not started";
+    stopBtn.disabled = true;
+}
+
+async function startLive() {
+    cleanupLive();
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } }
+        });
+    } catch (e) {
+        alert("Camera access failed");
+        return;
+    }
+
+    camera.srcObject = stream;
+    placeholder.style.display = "none";
+    statusText.textContent = "Camera started";
+    stopBtn.disabled = false;
+
+    ws = new WebSocket(`ws://${location.host}/ws/live`);
+    ws.binaryType = "arraybuffer";
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    sending = true;
+
+    
+    function sendFrame() {
+        if (!sending || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+        canvas.width = camera.videoWidth;
+        canvas.height = camera.videoHeight;
+        ctx.drawImage(camera, 0, 0);
+
+        ws.send(canvas.toDataURL("image/jpeg", 0.7));
+    }
+
+    
+    ws.onmessage = e => {
+        const blob = new Blob([e.data], { type: "image/jpeg" });
+        resultImg.src = URL.createObjectURL(blob);
+        resultImg.style.display = "block";
+
+        requestAnimationFrame(sendFrame);
+    };
+
+    
+    ws.onopen = () => {
+        sendFrame();
+    };
+}
+
+openCamera.onclick = startLive;
+stopBtn.onclick = cleanupLive;
+
+backHome.onclick = () => {
+    cleanupLive();
+    location.replace("/");
+};
+
+window.addEventListener("beforeunload", cleanupLive);
+</script>
+
+</body>
+</html>

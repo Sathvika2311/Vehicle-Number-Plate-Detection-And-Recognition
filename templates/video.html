@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ANPR Video Processing</title>
+
+<style>
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #f4f6f8);
+    padding: 30px 0;
+    color: #333;
+}
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #1976d2;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width:auto;
+}
+.back-btn:hover { background: #0d47a1; }
+
+.container {
+    background: #ffffff;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    width: 420px;
+    margin: 0 auto 30px;
+    text-align: center;
+}
+h2 { margin-bottom: 20px; color: #0d47a1; }
+
+.file-input {
+    border: 2px dashed #bbdefb;
+    padding: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+.file-input input { display: none; }
+.file-name { margin-top: 10px; font-size: 14px; color: #555; }
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #b0bec5;
+    color: white;
+    cursor: not-allowed;
+}
+button.enabled { background: #1976d2; cursor: pointer; }
+button.enabled:hover { background: #0d47a1; }
+
+.video-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 0 20px;
+}
+.video-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.video-box h3 { margin-bottom: 10px; color: #1565c0; }
+video, img {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+.placeholder { color: #888; font-size: 14px; padding: 40px 0; }
+
+
+#pauseBtn, #resumeBtn {
+    width: auto;
+    padding: 6px 14px;
+    margin: 0 5px 10px;
+    border-radius: 6px;
+    border: none;
+    background: #546e7a;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+}
+#pauseBtn:hover, #resumeBtn:hover { background: #37474f; }
+#pauseBtn:disabled, #resumeBtn:disabled {
+    background: #cfd8dc;
+    cursor: not-allowed;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="window.location.href='/'">← Back</button>
+
+<div class="container">
+<h2>Upload Video</h2>
+<form id="videoForm">
+<div class="file-input">
+<label for="video">Click to select video</label>
+<input type="file" id="video" accept="video/*">
+<div class="file-name" id="fileName">No file selected</div>
+</div>
+<button type="submit" id="processBtn">Process</button>
+</form>
+</div>
+
+<div class="video-wrapper">
+<div class="video-box">
+<h3>Uploaded Video</h3>
+<div id="uploadPreview" class="placeholder">No video uploaded</div>
+</div>
+
+<div class="video-box">
+<h3>Video Processing Result</h3>
+
+<div>
+<button id="pauseBtn" disabled>⏸ Pause</button>
+<button id="resumeBtn" disabled>▶ Resume</button>
+</div>
+
+<div id="liveStream" class="placeholder">
+Video processing result will appear here
+</div>
+</div>
+</div>
+
+<script>
+const fileInput = document.getElementById("video");
+const processBtn = document.getElementById("processBtn");
+const fileName = document.getElementById("fileName");
+const uploadPreview = document.getElementById("uploadPreview");
+const liveStream = document.getElementById("liveStream");
+const videoForm = document.getElementById("videoForm");
+const pauseBtn = document.getElementById("pauseBtn");
+const resumeBtn = document.getElementById("resumeBtn");
+
+let lastValidVideoFile = null;
+let currentVideoFileName = null;
+
+processBtn.disabled = true;
+
+fileInput.addEventListener("change", () => {
+    if (!fileInput.files.length) return;
+
+    const file = fileInput.files[0];
+
+    
+    if (!file.type.startsWith("video/")) {
+        alert("Only video files are allowed");
+        fileInput.value = "";
+        return;   
+    }
+
+    
+    if (
+        lastValidVideoFile &&
+        file.name === lastValidVideoFile.name &&
+        file.size === lastValidVideoFile.size &&
+        file.lastModified === lastValidVideoFile.lastModified
+    ) {
+        return;
+    }
+
+    
+    lastValidVideoFile = file;
+
+    fileName.textContent = file.name;
+    processBtn.disabled = false;
+    processBtn.classList.add("enabled");
+
+    uploadPreview.innerHTML =
+        `<video controls><source src="${URL.createObjectURL(file)}"></video>`;
+
+    liveStream.innerHTML =
+        `<div class="placeholder">Video processing result will appear here</div>`;
+
+    pauseBtn.disabled = true;
+    resumeBtn.disabled = true;
+});
+
+
+videoForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!lastValidVideoFile) return;
+    processBtn.disabled = true;
+    processBtn.classList.remove("enabled");
+
+    const formData = new FormData();
+    formData.append("video", lastValidVideoFile);
+
+    liveStream.innerHTML = `<div class="placeholder">Starting...</div>`;
+
+    const response = await fetch("/video", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    if (!data.video_path) return;
+
+    currentVideoFileName = data.video_path;
+
+    liveStream.innerHTML =
+        `<img src="/video_feed/${currentVideoFileName}?ts=${Date.now()}">`;
+
+    pauseBtn.disabled = false;
+    resumeBtn.disabled = true;
+});
+
+pauseBtn.addEventListener("click", async () => {
+    if (!currentVideoFileName) return;
+
+    await fetch(`/video_pause/${currentVideoFileName}`, { method: "POST" });
+
+    pauseBtn.disabled = true;
+    resumeBtn.disabled = false;
+});
+
+resumeBtn.addEventListener("click", async () => {
+    if (!currentVideoFileName) return;
+
+    await fetch(`/video_resume/${currentVideoFileName}`, { method: "POST" });
+
+    pauseBtn.disabled = false;
+    resumeBtn.disabled = true;
+});
+</script>
+
+</body>
+</html>

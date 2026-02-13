@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANPR Image Capture</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #f4f6f8);
+            padding: 30px 0;
+            color: #333;
+        }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: #1976d2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.3s; width: auto;}
+        .back-btn:hover { background: #0d47a1; }
+
+        .container { background: #fff; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 420px; margin: 0 auto 30px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #0d47a1; }
+
+        .file-input { border: 2px dashed #bbdefb; padding: 20px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
+        .file-input label { cursor: pointer; color: #555; }
+        .file-name { margin-top: 10px; font-size: 14px; color: #555; }
+
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; background: #b0bec5; color: white; cursor: not-allowed; transition: background 0.3s; margin-top: 10px; }
+        button.enabled { background: #1976d2; cursor: pointer; }
+        button.enabled:hover { background: #0d47a1; }
+
+        .image-wrapper { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px; }
+
+        .image-box { background: #fff; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.08); min-height: 380px; display: flex; flex-direction: column; justify-content: flex-start; }
+        .image-box h3 { margin-bottom: 10px; color: #1565c0; }
+        .image-box img { max-width: 100%; border-radius: 6px; border: 1px solid #ccc; }
+        .placeholder { color: #888; font-size: 14px; padding: 40px 0; }
+
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #1976d2; border-radius: 50%; width: 50px; height: 50px; margin: 40px auto; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        video { width: 100%; border-radius: 6px; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+<button class="back-btn" id="backHome">← Back</button>
+
+<div class="container">
+    <h2>Capture Image</h2>
+
+    <div class="file-input">
+        <label id="openCamera">Click to open camera</label>
+        <div class="file-name" id="statusText">Camera not started</div>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <button id="captureBtn">Capture Image</button>
+    <button id="cancelBtn">Cancel Capture</button>
+
+    <form method="POST" id="captureForm">
+        <input type="hidden" name="image" id="imageInput">
+        <button type="submit" id="processBtn">Process</button>
+    </form>
+</div>
+
+<div class="image-wrapper">
+    <div class="image-box">
+        <h3>Captured Image</h3>
+        <div id="uploadPreview" class="placeholder">No image captured</div>
+    </div>
+
+    <div class="image-box">
+        <h3>Processed Result</h3>
+        <div id="resultBox">
+            {% if no_plate %}
+                <p style="color:red; font-weight:bold;">No plate detected in the captured image.</p>
+            {% elif result %}
+                <img src="{{ url_for('static', filename='results/' + result) }}">
+            {% else %}
+                <div class="placeholder">Result will appear here</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+history.replaceState(null, "", window.location.pathname);
+
+const nav = performance.getEntriesByType("navigation");
+if (nav.length && nav[0].type === "reload") {
+    sessionStorage.clear();
+}
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const openCamera = document.getElementById("openCamera");
+const captureBtn = document.getElementById("captureBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+const processBtn = document.getElementById("processBtn");
+const uploadPreview = document.getElementById("uploadPreview");
+const imageInput = document.getElementById("imageInput");
+const resultBox = document.getElementById("resultBox");
+const statusText = document.getElementById("statusText");
+const backHome = document.getElementById("backHome");
+
+let cameraStream = null;
+
+const savedImage = sessionStorage.getItem("capturedImage");
+if (savedImage) {
+    uploadPreview.innerHTML = `<img src="${savedImage}">`;
+    imageInput.value = savedImage;
+}
+
+processBtn.disabled = true;
+captureBtn.disabled = true;
+cancelBtn.disabled = true;
+
+backHome.onclick = () => {
+    sessionStorage.clear();
+    window.location.href = "/";
+};
+
+openCamera.onclick = async () => {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: "environment" } }
+});
+
+    video.srcObject = cameraStream;
+
+    statusText.textContent = "Camera started";
+    captureBtn.disabled = false;
+    cancelBtn.disabled = false;
+    captureBtn.classList.add("enabled");
+    cancelBtn.classList.add("enabled");
+};
+
+captureBtn.onclick = () => {
+    
+    resultBox.innerHTML = `<div class="placeholder">Result will appear here</div>`;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    const dataURL = canvas.toDataURL("image/jpeg");
+    uploadPreview.innerHTML = `<img src="${dataURL}">`;
+    imageInput.value = dataURL;
+
+    sessionStorage.setItem("capturedImage", dataURL);
+
+    processBtn.disabled = false;
+    processBtn.classList.add("enabled");
+
+    stopCamera();
+};
+
+cancelBtn.onclick = stopCamera;
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+        video.srcObject = null;
+    }
+    statusText.textContent = "Camera stopped";
+    captureBtn.disabled = true;
+    cancelBtn.disabled = true;
+    captureBtn.classList.remove("enabled");
+    cancelBtn.classList.remove("enabled");
+}
+
+document.getElementById("captureForm").onsubmit = () => {
+    processBtn.disabled = true;
+    processBtn.classList.remove("enabled");
+    resultBox.innerHTML = `<div class="spinner"></div>`;
+};
+</script>
+
+</body>
+</html>
