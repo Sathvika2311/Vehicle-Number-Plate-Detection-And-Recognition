@@ -51,58 +51,58 @@ A real-time **Automatic Number Plate Detection and Recognition** system built us
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
-│         YOLOv11 Detection Model                │
-│  • Detect number plates                      │
-│  • Output bounding boxes + confidence        │
+│         YOLOv11 Detection Model               │
+│  • Detect number plates                       │
+│  • Output bounding boxes + confidence         │
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
 │         OCR Processing Layer                  │
 │  • CRNN                                       │
-│  • Multi-line text handling                   │                  │
+│  • Multi-line text handling                   │                  
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
 │       Text Filtering & Cleaning               │
-│  • Remove noise & symbols                    │
-│  • Filter invalid/English words              │
-│  • Normalize text                            │
+│  • Remove noise & symbols                     │
+│  • Filter invalid/English words               │
+│  • Normalize text                             │
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
 │   Indian Plate Validation Engine              │
-│  • Format detection                          │
-│  • Regex validation                          │
-│  • Smart correction                          │
+│  • Format detection                           │
+│  • Regex validation                           │
+│  • Smart correction                           │
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
 │   Tracking & Optimization Layer               │
-│  • Plate ID tracking                         │
-│  • Frame skipping                            │
-│  • OCR interval control                      │
-│  • Detection caching                         │
+│  • Plate ID tracking                          │
+│  • Frame skipping                             │
+│  • OCR interval control                       │
+│  • Detection caching                          │
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
-│        FastAPI Backend Server                │
-│  • REST APIs                                 │
-│  • WebSocket live streaming                  │
-│  • Video streaming (MJPEG)                   │
+│        FastAPI Backend Server                 │
+│  • REST APIs                                  │
+│  • WebSocket live streaming                   │
+│  • Video streaming (MJPEG)                    │
 └───────────────────────────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
-│      Frontend UI & History Storage           │
-│  • Display results                           │
-│  • Store logs (image/capture/video/live)     │
+│      Frontend UI & History Storage            │
+│  • Display results                            │
+│  • Store logs (image/capture/video/live)      │
 └───────────────────────────────────────────────┘
-
+```
 ---
 
 ## ⚙️ Installation
@@ -126,7 +126,7 @@ source venv/bin/activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
-
+```
 ---
 
 ## 📁 Project Structure
@@ -136,7 +136,7 @@ pip install -r requirements.txt
 project/
 │
 ├── app.py                     # FastAPI backend
-├── speed_estimator.py         # Detection + OCR pipeline
+├── speed_estimator.py         # Detection + Recognition pipeline
 │
 ├── templates/                 # HTML UI
 │   ├── index.html
@@ -159,5 +159,5 @@ project/
 ├── live_history.txt
 │
 └── requirements.txt
-
+```
 ---
