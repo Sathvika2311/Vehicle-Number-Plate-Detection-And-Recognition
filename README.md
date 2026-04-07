@@ -44,3 +44,63 @@ A real-time **Automatic Number Plate Recognition (ANPR)** system built using dee
 
 ## 🏗️ Architecture
 
+```text
+┌───────────────────────────────────────────────┐
+│               Input Sources                   │
+│  Image | Video | Capture | Live Stream        │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│         YOLOv8 Detection Model                │
+│  • Detect number plates                      │
+│  • Output bounding boxes + confidence        │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│         OCR Processing Layer                  │
+│  • CRNN (Primary)                            │
+│  • PaddleOCR (Fallback)                      │
+│  • Multi-line text handling                  │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│       Text Filtering & Cleaning               │
+│  • Remove noise & symbols                    │
+│  • Filter invalid/English words              │
+│  • Normalize text                            │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│   Indian Plate Validation Engine              │
+│  • Format detection                          │
+│  • Regex validation                          │
+│  • Smart correction                          │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│   Tracking & Optimization Layer               │
+│  • Plate ID tracking                         │
+│  • Frame skipping                            │
+│  • OCR interval control                      │
+│  • Detection caching                         │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│        FastAPI Backend Server                │
+│  • REST APIs                                 │
+│  • WebSocket live streaming                  │
+│  • Video streaming (MJPEG)                   │
+└───────────────────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│      Frontend UI & History Storage           │
+│  • Display results                           │
+│  • Store logs (image/video/live)             │
+└───────────────────────────────────────────────┘
