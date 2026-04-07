@@ -1,24 +1,23 @@
-# 🚗 Vehicle Number Plate Detection & Recognition System (ANPR)
+# 🚗 Vehicle Number Plate Detection and Recognition System Using Deep Learning
 
-A real-time **Automatic Number Plate Recognition (ANPR)** system built using deep learning and computer vision. The system detects vehicle number plates from images, videos, and live streams, extracts text using OCR, and intelligently validates and corrects Indian license plate formats.
+A real-time **Automatic Number Plate Detection and Recognition** system built using deep learning and computer vision. The system detects vehicle number plates from images, videos, and live streams, extracts text using OCR, and intelligently validates and corrects Indian license plate formats.
 
 ---
 
 ## ✨ Key Features
 
 - 🔍 **Accurate Plate Detection**
-  - YOLOv8-based number plate detection
+  - YOLOv11-based number plate detection
 
 - 🔤 **Hybrid OCR System**
-  - PaddleOCR for text extraction
-  - CRNN architecture support (extensible)
+  - CRNN architecture
 
 - 🇮🇳 **Indian Plate Validation Engine**
   - Supports Standard, BH-series, Military, Old formats
   - Regex-based validation with state verification
 
 - 🧠 **Automatic Error Correction**
-  - Fixes OCR errors (O→0, S→5, B→8, etc.)
+  - Fixes text errors (O→0, S→5, B→8, etc.)
   - Format-aware correction logic
 
 - 🎥 **Multi-Input Support**
@@ -33,7 +32,7 @@ A real-time **Automatic Number Plate Recognition (ANPR)** system built using dee
   - Detection caching
 
 - 📊 **Confidence Scoring**
-  - Combines detection + OCR confidence
+  - Combines Detection + Recognition confidence
   - Boosting mechanism for stability
 
 - 🧾 **History Logging**
@@ -52,7 +51,7 @@ A real-time **Automatic Number Plate Recognition (ANPR)** system built using dee
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
-│         YOLOv8 Detection Model                │
+│         YOLOv11 Detection Model                │
 │  • Detect number plates                      │
 │  • Output bounding boxes + confidence        │
 └───────────────────────────────────────────────┘
@@ -60,9 +59,8 @@ A real-time **Automatic Number Plate Recognition (ANPR)** system built using dee
                     ▼
 ┌───────────────────────────────────────────────┐
 │         OCR Processing Layer                  │
-│  • CRNN (Primary)                            │
-│  • PaddleOCR (Fallback)                      │
-│  • Multi-line text handling                  │
+│  • CRNN                                       │
+│  • Multi-line text handling                   │                  │
 └───────────────────────────────────────────────┘
                     │
                     ▼
@@ -102,5 +100,64 @@ A real-time **Automatic Number Plate Recognition (ANPR)** system built using dee
 ┌───────────────────────────────────────────────┐
 │      Frontend UI & History Storage           │
 │  • Display results                           │
-│  • Store logs (image/video/live)             │
+│  • Store logs (image/capture/video/live)     │
 └───────────────────────────────────────────────┘
+
+---
+
+## ⚙️ Installation
+
+```text
+
+# 1. Clone the repository
+git clone <your-repo-url>
+cd <project-folder>
+
+# 2. Create virtual environment
+python -m venv venv
+
+# Activate environment
+
+# Windows:
+venv\Scripts\activate
+
+# Linux / Mac:
+source venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+---
+
+## 📁 Project Structure
+
+```text
+
+project/
+│
+├── app.py                     # FastAPI backend
+├── speed_estimator.py         # Detection + OCR pipeline
+│
+├── templates/                 # HTML UI
+│   ├── index.html
+│   ├── image.html
+│   ├── video.html
+│   ├── capture.html
+│   └── live.html
+│
+├── static/
+│   ├── uploads/               # Uploaded media
+│   ├── results/               # Output images
+│
+├── models/
+│   ├── best_finetuned.pt      # YOLO model
+│   └── best_crnn.pth          # CRNN model
+│
+├── image_history.txt
+├── video_history.txt
+├── capture_history.txt
+├── live_history.txt
+│
+└── requirements.txt
+
+---
