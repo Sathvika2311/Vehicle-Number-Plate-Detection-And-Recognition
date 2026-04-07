@@ -105,27 +105,65 @@ A real-time **Automatic Number Plate Detection and Recognition** system built us
 ```
 ---
 
-## ⚙️ Installation
+## 🔧 Prerequisites
 
 ```text
+Software Requirements:
+- Python 3.9 – 3.11
+- pip (Python package manager)
+- Git (for cloning repository)
 
-# 1. Clone the repository
-git clone <your-repo-url>
-cd <project-folder>
+Hardware Requirements:
+- RAM: Minimum 8 GB recommended
+- CPU: Multi-core processor
+- GPU (Optional): NVIDIA GPU for faster inference
 
-# 2. Create virtual environment
-python -m venv venv
+Libraries & Frameworks:
+- OpenCV (cv2) → Image & video processing
+- NumPy → Numerical operations
+- PyTorch → Deep learning framework
+- Ultralytics YOLO → Number plate detection
+- NLTK → English word filtering
+- FastAPI → Backend API server
+- Uvicorn → ASGI server
 
-# Activate environment
+Models Required:
+- YOLO Model → best_finetuned.pt
+- CRNN Model → best_crnn.pth
 
-# Windows:
-venv\Scripts\activate
+Other Requirements:
+- Stable internet connection (for downloading models/packages)
+- Webcam (for live detection, optional)
+```
+---
 
-# Linux / Mac:
-source venv/bin/activate
+## 🚀 How to Run the Project
 
-# 3. Install dependencies
-pip install -r requirements.txt
+```text
+Step 1: Clone the Repository
+→ git clone <your-repo-url>
+→ cd <project-folder>
+
+Step 2: Create Virtual Environment
+→ python -m venv venv
+
+Step 3: Activate Environment
+→ Windows: venv\Scripts\activate
+→ Linux/Mac: source venv/bin/activate
+
+Step 4: Install Dependencies
+→ pip install -r requirements.txt
+
+Step 5: Ensure Models are Present
+→ models/best_finetuned.pt
+→ models/best_crnn.pth
+
+Step 6: Run FastAPI Server
+→ uvicorn app:app --reload --host 127.0.0.1 --port 8000
+
+Step 7: Open in Browser
+→ http://localhost:8000
+
 ```
 ---
 
@@ -161,3 +199,73 @@ project/
 └── requirements.txt
 ```
 ---
+
+## 🖥️ Web Interface
+
+```text
+Home Page (/)
+→ Overview of the system
+→ Navigation to all modules
+
+Image Detection (/image)
+→ Upload an image
+→ Detect number plate
+→ Display extracted text and confidence
+→ Save result to history
+
+Video Processing (/video)
+→ Upload video file
+→ Real-time frame processing
+→ Stream processed video with detections
+→ Pause / Resume support
+→ Save result to history
+
+Camera Capture (/capture)
+→ Capture image from browser camera
+→ Perform instant detection
+→ Display detected plates with confidence
+→ Save result to history
+
+Live Detection (/live)
+→ Real-time detection using WebSocket
+→ Continuous frame streaming
+→ Optimized with frame skipping
+→ Displays live plate results
+→ Save result to history
+
+```
+
+---
+
+## 📊 Training Results
+
+```text
+🔍 YOLOv11 (Number Plate Detection)
+
+Precision        : 0.9708
+Recall           : 0.9432
+mAP@0.5          : 0.9775 
+mAP@0.5:0.95     : 0.6501
+
+Key Insights:
+→ High precision indicates very few false positives
+→ Strong recall ensures most plates are detected
+→ High mAP@0.5 confirms robust detection performance
+→ mAP@0.5:0.95 shows good performance across stricter IoU thresholds
+
+
+🔤 CRNN (Text Recognition Model)
+
+Validation Accuracy : 96.80%
+Validation CER      : 0.0086
+
+Key Insights:
+→ High accuracy ensures reliable character recognition
+→ Very low CER (Character Error Rate) indicates minimal OCR errors
+→ Suitable for real-world number plate recognition scenarios
+```
+
+---
+
+
+
