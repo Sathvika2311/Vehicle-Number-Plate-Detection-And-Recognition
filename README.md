@@ -1,9 +1,15 @@
-# 🚗 Vehicle Number Plate Detection and Recognition System Using Deep Learning
+# 🚗 Vehicle Number Plate Detection and Recognition Using Deep Learning
 
-A real-time **Automatic Number Plate Detection and Recognition** system built using deep learning and computer vision. The system detects vehicle number plates from images, videos, and live streams, extracts text using OCR, and intelligently validates and corrects Indian license plate formats.
+A real-time **Automatic Number Plate Detection and Recognition** system built using deep learning and computer vision. The system detects vehicle number plates from images, videos, and live streams, extracts text using CRNN, and intelligently validates and corrects Indian license plate formats.
 
 ---
+## 📂 Dataset
+🔗 [Click here to download dataset](https://universe.roboflow.com/roboflow-universe-projects/license-plate-recognition-rxg4e/dataset/13/download/yolov11)
 
+## 🤖 CRNN Model File
+🔗 [Click here to download trained CRNN model](https://drive.google.com/file/d/1JM2cj7G-LRyJckutk3n9YGCW7zWj7DOc/view?usp=sharing)
+
+---
 ## ✨ Key Features
 
 - 🔍 **Accurate Plate Detection**
